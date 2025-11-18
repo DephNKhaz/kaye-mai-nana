@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Karaoke — Always (template)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; }
+    .screen { width:90%; max-width:900px; text-align:center; }
+    .line { font-size:2rem; opacity:0.25; transition: opacity .3s, transform .3s; margin: 8px 0; }
+    .current { opacity:1; transform: scale(1.05); color: #ffd700; }
+    .controls { margin-top:20px; display:flex; gap:10px; justify-content:center; }
+    button { padding:10px 14px; font-size:1rem; cursor:pointer; }
+    input[type=range] { width:200px; }
+  </style>
+</head>
+<body>
+  <div class="screen">
+    <div id="lyricsContainer"></div>
+
+    <div class="controls">
+      <button id="prevBtn">⏮ Prev</button>
+      <button id="playBtn">▶ Play</button>
+      <button id="pauseBtn">⏸ Pause</button>
+      <button id="nextBtn">⏭ Next</button>
+      <label>Speed
+        <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1">
+      </label>
+    </div>
+  </div>
+
+  <script>
+    // ======= GANTI DISINI DENGAN LIRIKMU (ARRAY BARIS) ========
+    // Contoh: ["Line 1", "Line 2", "Line 3", ...]
+    const lyrics = [
+      "LINE PLACEHOLDER 1",
+      "LINE PLACEHOLDER 2",
+      "LINE PLACEHOLDER 3",
+      "LINE PLACEHOLDER 4"
+    ];
+    // =========================================================
+
+    const container = document.getElementById('lyricsContainer');
+    let index = 0;
+    let timer = null;
+    let baseDelay = 2500; // ms per baris (default) — ubah sesuai tempo / sinkronisasi
+    const speedControl = document.getElementById('speed');
+
+    function renderLyrics() {
+      container.innerHTML = '';
+      lyrics.forEach((l, i) => {
+        const div = document.createElement('div');
+        div.className = 'line' + (i === index ? ' current' : '');
+        div.textContent = l;
+        div.dataset.i = i;
+        container.appendChild(div);
+      });
+      // scroll the current line into view
+      const current = container.querySelector('.current');
+      if (current) current.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+
+    function start() {
+      if (timer) return;
+      playStep();
+      timer = setInterval(playStep, baseDelay / parseFloat(speedControl.value));
+    }
+
+    function playStep() {
+      renderLyrics();
+      index++;
+      if (index >= lyrics.length) {
+        clearInterval(timer);
+        timer = null;
+        index = lyrics.length - 1;
+      }
+    }
+
+    function pause() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function prev() {
+      pause();
+      index = Math.max(0, index - 1);
+      renderLyrics();
+    }
+
+    function next() {
+      pause();
+      index = Math.min(lyrics.length - 1, index + 1);
+      renderLyrics();
+    }
+
+    document.getElementById('playBtn').addEventListener('click', start);
+    document.getElementById('pauseBtn').addEventListener('click', pause);
+    document.getElementById('prevBtn').addEventListener('click', prev);
+    document.getElementById('nextBtn').addEventListener('click', next);
+
+    speedControl.addEventListener('input', () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = setInterval(playStep, baseDelay / parseFloat(speedControl.value));
+      }
+    });
+
+    // Klik suatu baris untuk melompat ke baris itu
+    container.addEventListener('click', (e) => {
+      const el = e.target.closest('.line');
+      if (!el) return;
+      index = Number(el.dataset.i);
+      renderLyrics();
+    });
+
+    // Inisialisasi tampilan
+    renderLyrics();
+  </script>
+</body>
+</html>
